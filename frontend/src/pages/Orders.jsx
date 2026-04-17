@@ -200,27 +200,27 @@ function Orders({ customers }) {
                      <td style={styles.td}>{order.id}</td>
                      <td style={styles.td}>{`${order.first_name || ''} ${order.last_name || ''}`.trim() || 'Unknown'}</td>
                      <td style={styles.td}>{order.address_line1 || '-'}</td>
-                     <td style={{ ...styles.td, color: statusColors[order.status], fontWeight: 'bold' }}>
-                       {order.status}
+                      <td style={{ ...styles.td, color: statusColors[order.status], fontWeight: 'bold' }}>
+                        {order.status}
                       </td>
-                       <td style={styles.td}>
-                         {order.items?.map((item, i) => (
-                           <div key={i}>{item.product_name || item.product_id}</div>
-                         ))}
-                       </td>
-                       <td style={styles.td}>
-                         {order.carrier ? `${order.carrier} ${order.tracking_number || ''}` : '-'}
-                       </td>
-                       <td style={{ ...styles.td, fontWeight: 'bold' }}>
-                         ${orderTotal.toFixed(2)}
-                       </td>
+                      <td style={styles.td}>
+                        {order.items?.map((item, i) => (
+                          <div key={i}>{item.product_name || item.product_id}</div>
+                        ))}
+                      </td>
+                      <td style={styles.td}>
+                        {order.carrier ? `${order.carrier} ${order.tracking_number || ''}` : '-'}
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: 'bold' }}>
+                                               {`$${orderTotal.toFixed(2)}`}
+                                             </td>
                       <td style={styles.td}>{new Date(order.created_at).toLocaleDateString()}</td>
-                   <td style={styles.td}>
-                     <button onClick={(e) => { e.stopPropagation(); setEditingOrder(order); }} style={{ ...styles.deleteButton, background: '#3b82f6', marginRight: '0.5rem' }}>Edit</button>
-                     <button onClick={(e) => { e.stopPropagation(); handleDelete(order.id); }} style={styles.deleteButton}>Delete</button>
-                   </td>
-                 </tr>
-               ))}
+                      <td style={styles.td}>
+                        <button onClick={(e) => { e.stopPropagation(); setEditingOrder(order); }} style={{ ...styles.deleteButton, background: '#3b82f6', marginRight: '0.5rem' }}>Edit</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(order.id); }} style={styles.deleteButton}>Delete</button>
+                      </td>
+                    </tr>
+                  )})}
              </tbody>
            </table>
 
@@ -276,7 +276,7 @@ function Orders({ customers }) {
                        });
                      });
                    }}
-                />
+                 />
               </div>
             </div>
           )}

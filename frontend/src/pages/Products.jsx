@@ -181,18 +181,15 @@ function Products({ navigateTo }) {
           <tr>
             <th onClick={() => handleSort('name')} style={styles.th}>
               Name {renderSortIcon('name')}
-            </th>
-            <th onClick={() => handleSort('category')} style={styles.th}>
-              Category {renderSortIcon('category')}
-            </th>
-            <th onClick={() => handleSort('price')} style={styles.th}>
-              Price {renderSortIcon('price')}
-            </th>
-            <th style={styles.th}>Material</th>
-            <th style={styles.th}>Size</th>
-            <th style={styles.th}>Actions</th>
-          </tr>
-        </thead>
+             </th>
+             <th onClick={() => handleSort('category')} style={styles.th}>
+               Category {renderSortIcon('category')}
+             </th>
+             <th style={styles.th}>Material</th>
+             <th style={styles.th}>Size</th>
+             <th style={styles.th}>Actions</th>
+           </tr>
+         </thead>
         <tbody>
           {products.length === 0 ? (
             <tr>
@@ -203,11 +200,10 @@ function Products({ navigateTo }) {
           ) : (
             products.map(product => (
               <tr key={product.id}>
-                <td style={styles.td}>{product.name}</td>
-                <td style={styles.td}>{product.category || '-'}</td>
-                <td style={styles.td}>${(product.price || 0).toFixed(2)}</td>
-                <td style={styles.td}>{product.material || '-'}</td>
-                <td style={styles.td}>{product.size || '-'}</td>
+                 <td style={styles.td}>{product.name}</td>
+                 <td style={styles.td}>{product.category || '-'}</td>
+                 <td style={styles.td}>{product.material || '-'}</td>
+                 <td style={styles.td}>{product.size || '-'}</td>
                 <td style={styles.td}>
                   <button onClick={() => handleEdit(product)} style={styles.editButton}>Edit</button>
                   {deleteConfirmId === product.id ? (
@@ -277,17 +273,7 @@ function Products({ navigateTo }) {
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 />
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Price</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  style={styles.input}
-                  value={formData.price || ''}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
+
               <div style={styles.formGroup}>
                 <label style={styles.label}>Material</label>
                 <input

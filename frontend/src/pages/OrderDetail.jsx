@@ -331,18 +331,46 @@ function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateI
                       }} style={styles.addButton}>+ Add Item</button>
                     )}
                   </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {!editingOrder && <button onClick={() => {
-          handleAddItem();
-          setEditingOrder(true);
-        }} style={{ ...styles.addButton, marginTop: '1rem' }}>+ Add Item</button>}
-      </div>
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+         )}
+         {!editingOrder && <button onClick={() => {
+           handleAddItem();
+           setEditingOrder(true);
+         }} style={{ ...styles.addButton, marginTop: '1rem' }}>+ Add Item</button>}
+       </div>
 
-      <h2 style={{ marginTop: '2rem' }}>Print Jobs</h2>
+       <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '8px' }}>
+         <h3 style={{ marginBottom: '1rem' }}>Order Totals</h3>
+         {items.length > 0 && (
+           <div style={{ marginBottom: '1rem' }}>
+             {items.map((item, i) => (
+               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                 <span>{item.product_name || `Item ${i + 1}`}</span>
+                 <span>${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+               </div>
+             ))}
+           </div>
+         )}
+         <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+             <span>Items Total:</span>
+             <span>${items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0).toFixed(2)}</span>
+           </div>
+           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+             <span>Shipping:</span>
+             <span>${(order.shipping_price || 0).toFixed(2)}</span>
+           </div>
+           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2rem' }}>
+             <span>Order Total:</span>
+             <span>${(items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0) + (order.shipping_price || 0)).toFixed(2)}</span>
+           </div>
+         </div>
+       </div>
+
+       <h2 style={{ marginTop: '2rem' }}>Print Jobs</h2>
       {printJobs.length === 0 ? (
         <p style={{ color: '#64748b' }}>No print jobs yet</p>
       ) : (

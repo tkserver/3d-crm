@@ -44,7 +44,6 @@ const initDB = () => {
         name TEXT NOT NULL,
         description TEXT,
         category TEXT,
-        price REAL DEFAULT 0,
         material TEXT,
         size TEXT,
         image_url TEXT,
