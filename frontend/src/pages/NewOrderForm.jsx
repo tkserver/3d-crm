@@ -5,7 +5,10 @@ function NewOrderForm({ customers, onCancel, onSubmit, initialData }) {
     customer_id: initialData?.customer_id || '',
     shipping_address_id: initialData?.shipping_address_id || '',
     notes: initialData?.notes || '',
-    status: initialData?.status || 'NEW'
+    status: initialData?.status || 'NEW',
+    shipping_price: initialData?.shipping_price || '',
+    carrier: initialData?.carrier || '',
+    tracking_number: initialData?.tracking_number || ''
   });
   const [addresses, setAddresses] = useState([]);
   const [items, setItems] = useState(initialData?.items || []);
@@ -170,8 +173,17 @@ function NewOrderForm({ customers, onCancel, onSubmit, initialData }) {
                        style={{ ...styles.input, padding: '0.25rem', width: '80px' }}
                      />
                    </td>
+                   <td style={styles.td}>
+                     <input
+                       type="number"
+                       min="1"
+                       value={item.quantity || 1}
+                       onChange={(e) => handleUpdateItem(index, { quantity: parseInt(e.target.value) || 1 })}
+                       style={{ ...styles.input, padding: '0.25rem', width: '60px' }}
+                     />
+                   </td>
                     <td style={styles.td}>
-                      ${(item.price || 0) * (item.quantity || 1)}.toFixed(2)
+                      {`$${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`}
                     </td>
                   <td style={styles.td}>
                     <input
@@ -199,10 +211,33 @@ function NewOrderForm({ customers, onCancel, onSubmit, initialData }) {
           step="0.01"
           min="0"
           style={{ ...styles.input }}
-          value={formData.shipping_price || ''}
+          value={formData.shipping_price}
           onChange={(e) => setFormData({ ...formData, shipping_price: parseFloat(e.target.value) || 0 })}
         />
       </div>
+
+      {initialData && (
+        <>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={styles.label}>Carrier</label>
+            <input
+              type="text"
+              style={{ ...styles.input }}
+              value={formData.carrier}
+              onChange={(e) => setFormData({ ...formData, carrier: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={styles.label}>Tracking Number</label>
+            <input
+              type="text"
+              style={{ ...styles.input }}
+              value={formData.tracking_number}
+              onChange={(e) => setFormData({ ...formData, tracking_number: e.target.value })}
+            />
+          </div>
+        </>
+      )}
 
       <div style={{ marginBottom: '1rem' }}>
         <label style={styles.label}>Notes</label>
@@ -230,7 +265,7 @@ function NewOrderForm({ customers, onCancel, onSubmit, initialData }) {
 
       <div style={styles.formActions}>
         <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
-        <button type="submit" style={styles.submitButton}>Create Order</button>
+        <button type="submit" style={styles.submitButton}>{initialData ? 'Save Changes' : 'Create Order'}</button>
       </div>
     </form>
   );

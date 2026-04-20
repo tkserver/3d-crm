@@ -25,10 +25,65 @@ function Products({ navigateTo }) {
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [allCategories, setAllCategories] = useState([]);
+  const [allMaterials, setAllMaterials] = useState([]);
+  const [newCategory, setNewCategory] = useState('');
+  const [newMaterial, setNewMaterial] = useState('');
+
+  useEffect(() => {
+    fetchCategories();
+    fetchMaterials();
+  }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [searchTerm, categoryFilter, sortField, sortOrder, currentPage]);
+
+  const fetchCategories = () => {
+    fetch('/api/categories')
+      .then(r => r.json())
+      .then(data => setAllCategories(data))
+      .catch(() => {});
+  };
+
+  const fetchMaterials = () => {
+    fetch('/api/materials')
+      .then(r => r.json())
+      .then(data => setAllMaterials(data))
+      .catch(() => {});
+  };
+
+  const addCategory = () => {
+    if (!newCategory.trim()) return;
+    fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newCategory.trim() })
+    })
+      .then(r => r.json())
+      .then((cat) => {
+        setAllCategories([...allCategories, cat]);
+        setFormData({ ...formData, category: cat.name });
+        setNewCategory('');
+      })
+      .catch(() => {});
+  };
+
+  const addMaterial = () => {
+    if (!newMaterial.trim()) return;
+    fetch('/api/materials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newMaterial.trim() })
+    })
+      .then(r => r.json())
+      .then((mat) => {
+        setAllMaterials([...allMaterials, mat]);
+        setFormData({ ...formData, material: mat.name });
+        setNewMaterial('');
+      })
+      .catch(() => {});
+  };
 
   const fetchProducts = () => {
     setLoading(true);
@@ -267,20 +322,54 @@ function Products({ navigateTo }) {
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Category</label>
-                <input
-                  style={styles.input}
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                />
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select
+                    style={{ ...styles.input, flex: 1 }}
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  >
+                    <option value="">Select category</option>
+                    {allCategories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <input
+                    style={{ ...styles.input, flex: 1 }}
+                    placeholder="New category..."
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }}
+                  />
+                  <button type="button" onClick={addCategory} style={{ ...styles.addButton, padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>+</button>
+                </div>
               </div>
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Material</label>
-                <input
-                  style={styles.input}
-                  value={formData.material}
-                  onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-                />
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select
+                    style={{ ...styles.input, flex: 1 }}
+                    value={formData.material}
+                    onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+                  >
+                    <option value="">Select material</option>
+                    {allMaterials.map(mat => (
+                      <option key={mat.id} value={mat.name}>{mat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <input
+                    style={{ ...styles.input, flex: 1 }}
+                    placeholder="New material..."
+                    value={newMaterial}
+                    onChange={(e) => setNewMaterial(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addMaterial(); } }}
+                  />
+                  <button type="button" onClick={addMaterial} style={{ ...styles.addButton, padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>+</button>
+                </div>
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Size</label>

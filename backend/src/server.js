@@ -15,6 +15,54 @@ app.use((req, res, next) => {
 
 initDB();
 
+// Categories CRUD
+app.get('/api/categories', (req, res) => {
+  db.all('SELECT * FROM categories ORDER BY name', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/categories', (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  db.run('INSERT INTO categories (name) VALUES (?)', [name], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ id: this.lastID, name });
+  });
+});
+
+app.delete('/api/categories/:id', (req, res) => {
+  db.run('DELETE FROM categories WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: true });
+  });
+});
+
+// Materials CRUD
+app.get('/api/materials', (req, res) => {
+  db.all('SELECT * FROM materials ORDER BY name', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/materials', (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  db.run('INSERT INTO materials (name) VALUES (?)', [name], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ id: this.lastID, name });
+  });
+});
+
+app.delete('/api/materials/:id', (req, res) => {
+  db.run('DELETE FROM materials WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: true });
+  });
+});
+
 app.get('/api/products', (req, res) => {
   const { search, category, sort = 'name', order = 'asc', page = 1, limit = 20 } = req.query;
   const offset = (page - 1) * limit;
@@ -311,15 +359,19 @@ app.post('/api/orders/:id/items', (req, res) => {
 
 app.put('/api/order-items/:id', (req, res) => {
   const { id } = req.params;
-  const { product_id, product_name, size, color, material, price, quantity, notes } = req.body;
-  db.run(
-    'UPDATE order_items SET product_id = ?, product_name = ?, size = ?, color = ?, material = ?, price = ?, quantity = ?, notes = ? WHERE id = ?',
-    [product_id || null, product_name, size || '', color || '', material || '', price || 0, quantity || 1, notes || '', id],
-    function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id, product_id, product_name, size, color, material, quantity, notes });
-    }
-  );
+  db.get('SELECT * FROM order_items WHERE id = ?', [id], (err, existing) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!existing) return res.status(404).json({ error: 'Item not found' });
+    const merged = { ...existing, ...req.body };
+    db.run(
+      'UPDATE order_items SET product_id = ?, product_name = ?, size = ?, color = ?, material = ?, price = ?, quantity = ?, notes = ? WHERE id = ?',
+      [merged.product_id || null, merged.product_name, merged.size || '', merged.color || '', merged.material || '', merged.price || 0, merged.quantity || 1, merged.notes || '', id],
+      function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(merged);
+      }
+    );
+  });
 });
 
 app.delete('/api/order-items/:id', (req, res) => {
