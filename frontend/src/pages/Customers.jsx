@@ -4,7 +4,7 @@ function Customers({ navigateTo, onCustomerSelect }) {
   const [customers, setCustomers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
-  const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '', phone: '', address: '' });
+  const [formData, setFormData] = useState({ first_name: '', last_name: '', company: '', email: '', phone: '', address: '' });
 
   useEffect(() => {
     fetchCustomers();
@@ -29,7 +29,7 @@ function Customers({ navigateTo, onCustomerSelect }) {
       fetchCustomers();
       setShowModal(false);
       setEditingCustomer(null);
-      setFormData({ first_name: '', last_name: '', email: '', phone: '', address: '' });
+      setFormData({ first_name: '', last_name: '', company: '', email: '', phone: '', address: '' });
     });
   };
 
@@ -43,6 +43,7 @@ function Customers({ navigateTo, onCustomerSelect }) {
     setFormData({ 
       first_name: customer.first_name || '', 
       last_name: customer.last_name || '',
+      company: customer.company || '',
       email: customer.email || '', 
       phone: customer.phone || '', 
       address: customer.address || '' 
@@ -52,7 +53,7 @@ function Customers({ navigateTo, onCustomerSelect }) {
 
   const handleNew = () => {
     setEditingCustomer(null);
-    setFormData({ first_name: '', last_name: '', email: '', phone: '', address: '' });
+    setFormData({ first_name: '', last_name: '', company: '', email: '', phone: '', address: '' });
     setShowModal(true);
   };
 
@@ -74,6 +75,7 @@ function Customers({ navigateTo, onCustomerSelect }) {
         <thead>
           <tr>
             <th style={styles.th}>Name</th>
+            <th style={styles.th}>Company</th>
             <th style={styles.th}>Email</th>
             <th style={styles.th}>Phone</th>
             <th style={styles.th}>Address</th>
@@ -85,6 +87,7 @@ function Customers({ navigateTo, onCustomerSelect }) {
           {customers.map(customer => (
             <tr key={customer.id}>
               <td style={styles.td}>{`${customer.first_name || ''} ${customer.last_name || ''}`}</td>
+              <td style={styles.td}>{customer.company || '-'}</td>
               <td style={styles.td}>{customer.email || '-'}</td>
               <td style={styles.td}>{customer.phone || '-'}</td>
               <td style={styles.td}>{customer.address || '-'}</td>
@@ -123,6 +126,14 @@ function Customers({ navigateTo, onCustomerSelect }) {
                   style={styles.input}
                   value={formData.last_name}
                   onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Company</label>
+                <input
+                  style={styles.input}
+                  value={formData.company}
+                  onChange={e => setFormData({ ...formData, company: e.target.value })}
                 />
               </div>
               <div style={styles.formGroup}>

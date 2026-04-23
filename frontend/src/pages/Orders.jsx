@@ -182,6 +182,7 @@ function Orders({ customers }) {
           onUpdatePrintJob={handleUpdatePrintJob}
           onDeletePrintJob={handleDeletePrintJob}
           onBack={() => { setSelectedOrder(null); fetchOrders(); }}
+          navigateTo={(view) => { window.location.hash = `/${view}`; }}
         />
       ) : (
         <>

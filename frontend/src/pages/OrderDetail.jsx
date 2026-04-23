@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateItem, onUpdateItem, onDeleteItem, onCreatePrintJob, onUpdatePrintJob, onDeletePrintJob, onBack }) {
+function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateItem, onUpdateItem, onDeleteItem, onCreatePrintJob, onUpdatePrintJob, onDeletePrintJob, onBack, navigateTo }) {
   const [editingOrder, setEditingOrder] = useState(false);
   const [formData, setFormData] = useState({
     customer_id: order.customer_id,
@@ -14,6 +14,7 @@ function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateI
   const [items, setItems] = useState([]);
   const [printJobs, setPrintJobs] = useState([]);
   const [products, setProducts] = useState([]);
+  const [receipts, setReceipts] = useState([]);
 
   useEffect(() => {
     if (order.id) {
@@ -26,6 +27,11 @@ function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateI
         .then(r => r.json())
         .then(data => setProducts(data.products || []))
         .catch(() => setProducts([]));
+
+      fetch(`/api/receipts?order_id=${order.id}`)
+        .then(r => r.json())
+        .then(data => setReceipts(Array.isArray(data) ? data : []))
+        .catch(() => setReceipts([]));
     }
   }, [order.id]);
 
@@ -129,6 +135,7 @@ function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateI
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {!editingOrder && (
             <>
+              <button onClick={() => navigateTo(`receipt-new-${order.id}`)} style={{ ...styles.addButton, background: '#10b981' }}>Generate Invoice</button>
               <button onClick={() => setEditingOrder(true)} style={styles.editButton}>Edit</button>
               <button onClick={() => onDeleteOrder(order.id)} style={styles.deleteButton}>Delete</button>
             </>
@@ -143,7 +150,7 @@ function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateI
             <label style={styles.label}>Customer</label>
             <select value={formData.customer_id} onChange={e => setFormData({ ...formData, customer_id: e.target.value })} style={{ ...styles.input, width: '100%' }}>
               {customers.map(c => (
-                <option key={c.id} value={c.id}>{`${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unknown'}</option>
+                <option key={c.id} value={c.id}>{`${c.first_name || ''} ${c.last_name || ''}`.trim() + (c.company ? ` (${c.company})` : '') || 'Unknown'}</option>
               ))}
             </select>
           </div>
@@ -349,6 +356,30 @@ function OrderDetail({ order, customers, onUpdateOrder, onDeleteOrder, onCreateI
       </div>
 
       <h2 style={{ marginTop: '2rem' }}>Print Jobs</h2>
+
+      <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
+        <h2 style={{ marginBottom: '1rem' }}>Invoices</h2>
+        {receipts.length > 0 ? (
+          <div>
+            {receipts.map(r => (
+              <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'white', borderRadius: '4px', marginBottom: '0.5rem', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <strong>{r.receipt_number}</strong>
+                  <span style={{ marginLeft: '1rem', color: '#64748b' }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                  <span style={{ marginLeft: '1rem' }}>${(r.total || 0).toFixed(2)}</span>
+                  {(r.amount_due || 0) <= 0
+                    ? <span style={{ marginLeft: '0.75rem', color: '#10b981', fontWeight: 'bold' }}>Paid</span>
+                    : <span style={{ marginLeft: '0.75rem', color: '#ef4444' }}>Due: ${(r.amount_due || 0).toFixed(2)}</span>
+                  }
+                </div>
+                <button onClick={() => navigateTo(`receipt-${r.id}`)} style={styles.editButton}>View</button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: '#64748b' }}>No invoices yet</p>
+        )}
+      </div>
       {printJobs.length === 0 ? (
         <p style={{ color: '#64748b' }}>No print jobs yet</p>
       ) : (

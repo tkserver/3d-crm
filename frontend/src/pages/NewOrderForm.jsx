@@ -69,7 +69,7 @@ function NewOrderForm({ customers, onCancel, onSubmit, initialData }) {
         >
           <option value="">Select Customer</option>
           {customers.map(c => (
-            <option key={c.id} value={c.id}>{`${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unknown'}</option>
+            <option key={c.id} value={c.id}>{`${c.first_name || ''} ${c.last_name || ''}`.trim() + (c.company ? ` (${c.company})` : '') || 'Unknown'}</option>
           ))}
         </select>
       </div>

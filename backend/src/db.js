@@ -15,6 +15,7 @@ const initDB = () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
+        company TEXT,
         email TEXT,
         phone TEXT,
         address TEXT,
@@ -60,6 +61,7 @@ const initDB = () => {
         name TEXT NOT NULL,
         description TEXT,
         category TEXT,
+        price REAL DEFAULT 0,
         material TEXT,
         size TEXT,
         image_url TEXT,
@@ -115,8 +117,49 @@ const initDB = () => {
       )
     `);
 
+    db.run(`
+      CREATE TABLE IF NOT EXISTS receipts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        receipt_number TEXT NOT NULL UNIQUE,
+        order_id INTEGER NOT NULL,
+        customer_id INTEGER NOT NULL,
+        billing_name TEXT,
+        billing_company TEXT,
+        billing_email TEXT,
+        billing_phone TEXT,
+        billing_address TEXT,
+        shipping_address TEXT,
+        subtotal REAL DEFAULT 0,
+        shipping_price REAL DEFAULT 0,
+        tax REAL DEFAULT 0,
+        total REAL DEFAULT 0,
+        payment_type TEXT DEFAULT '',
+        amount_paid REAL DEFAULT 0,
+        amount_due REAL DEFAULT 0,
+        payment_date TEXT,
+        payment_due_date TEXT,
+        payment_received INTEGER DEFAULT 0,
+        notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (customer_id) REFERENCES customers(id)
+      )
+    `);
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `);
+
+    db.run(`ALTER TABLE receipts ADD COLUMN payment_received INTEGER DEFAULT 0`, [], () => {});
+    db.run(`ALTER TABLE receipts ADD COLUMN billing_company TEXT DEFAULT ''`, [], () => {});
+    db.run(`ALTER TABLE customers ADD COLUMN company TEXT DEFAULT ''`, [], () => {});
+
     console.log('Database tables initialized');
   });
 };
 
 module.exports = { db, initDB };
+

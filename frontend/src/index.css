@@ -14,3 +14,16 @@ body {
 #root {
   min-height: 100vh;
 }
+
+@media print {
+  .no-print, nav {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  body {
+    background: white;
+  }
+}

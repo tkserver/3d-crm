@@ -161,26 +161,26 @@ app.get('/api/customers', (req, res) => {
 });
 
 app.post('/api/customers', (req, res) => {
-  const { first_name, last_name, email, phone, address } = req.body;
+  const { first_name, last_name, company, email, phone, address } = req.body;
   db.run(
-    'INSERT INTO customers (first_name, last_name, email, phone, address) VALUES (?, ?, ?, ?, ?)',
-    [first_name, last_name, email, phone, address || ''],
+    'INSERT INTO customers (first_name, last_name, company, email, phone, address) VALUES (?, ?, ?, ?, ?, ?)',
+    [first_name, last_name, company || '', email, phone, address || ''],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, first_name, last_name, email, phone, address });
+      res.json({ id: this.lastID, first_name, last_name, company, email, phone, address });
     }
   );
 });
 
 app.put('/api/customers/:id', (req, res) => {
   const { id } = req.params;
-  const { first_name, last_name, email, phone, address } = req.body;
+  const { first_name, last_name, company, email, phone, address } = req.body;
   db.run(
-    'UPDATE customers SET first_name = ?, last_name = ?, email = ?, phone = ?, address = ? WHERE id = ?',
-    [first_name, last_name, email, phone, address || '', id],
+    'UPDATE customers SET first_name = ?, last_name = ?, company = ?, email = ?, phone = ?, address = ? WHERE id = ?',
+    [first_name, last_name, company || '', email, phone, address || '', id],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ id, first_name, last_name, email, phone, address });
+      res.json({ id, first_name, last_name, company, email, phone, address });
     }
   );
 });
@@ -338,7 +338,10 @@ app.delete('/api/orders/:id', (req, res) => {
 
 app.get('/api/orders/:id/items', (req, res) => {
   const { id } = req.params;
-  db.all('SELECT * FROM order_items WHERE order_id = ? ORDER BY id', [id], (err, rows) => {
+  db.all(
+    `SELECT oi.*, p.description as product_description FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ? ORDER BY oi.id`,
+    [id],
+    (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -446,6 +449,99 @@ app.get('/api/customers/:id/orders', (req, res) => {
   db.all('SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC', [id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
+  });
+});
+
+// Settings
+app.get('/api/settings', (req, res) => {
+  db.all('SELECT key, value FROM settings', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const settings = {};
+    (rows || []).forEach(r => {
+      try { settings[r.key] = JSON.parse(r.value); } catch { settings[r.key] = r.value; }
+    });
+    res.json(settings);
+  });
+});
+
+app.get('/api/settings/:key', (req, res) => {
+  db.get('SELECT value FROM settings WHERE key = ?', [req.params.key], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.json({ value: null });
+    try { res.json({ value: JSON.parse(row.value) }); } catch { res.json({ value: row.value }); }
+  });
+});
+
+app.put('/api/settings/:key', (req, res) => {
+  const { key } = req.params;
+  const value = JSON.stringify(req.body.value);
+  db.run(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?',
+    [key, value, value],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ key, value: req.body.value });
+    }
+  );
+});
+
+// Receipts
+app.get('/api/receipts', (req, res) => {
+  const { order_id, customer_id } = req.query;
+  let sql = 'SELECT r.*, c.first_name, c.last_name FROM receipts r JOIN customers c ON r.customer_id = c.id';
+  const params = [];
+  if (order_id) { sql += ' WHERE r.order_id = ?'; params.push(order_id); }
+  else if (customer_id) { sql += ' WHERE r.customer_id = ?'; params.push(customer_id); }
+  sql += ' ORDER BY r.created_at DESC';
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.get('/api/receipts/:id', (req, res) => {
+  db.get(
+    'SELECT r.*, c.first_name, c.last_name FROM receipts r JOIN customers c ON r.customer_id = c.id WHERE r.id = ?',
+    [req.params.id],
+    (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row) return res.status(404).json({ error: 'Receipt not found' });
+      res.json(row);
+    }
+  );
+});
+
+app.post('/api/receipts', (req, res) => {
+  const { order_id, customer_id, billing_name, billing_company, billing_email, billing_phone, billing_address, shipping_address, subtotal, shipping_price, tax, total, payment_type, amount_paid, amount_due, payment_date, payment_due_date, payment_received, notes } = req.body;
+  const receipt_number = 'INV-' + Date.now();
+  db.run(
+    `INSERT INTO receipts (receipt_number, order_id, customer_id, billing_name, billing_company, billing_email, billing_phone, billing_address, shipping_address, subtotal, shipping_price, tax, total, payment_type, amount_paid, amount_due, payment_date, payment_due_date, payment_received, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [receipt_number, order_id, customer_id, billing_name || '', billing_company || '', billing_email || '', billing_phone || '', billing_address || '', shipping_address || '', subtotal || 0, shipping_price || 0, tax || 0, total || 0, payment_type || '', amount_paid || 0, amount_due || 0, payment_date || '', payment_due_date || '', payment_received ? 1 : 0, notes || ''],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, receipt_number, order_id, customer_id, billing_name, billing_company, billing_email, billing_phone, billing_address, shipping_address, subtotal, shipping_price, tax, total, payment_type, amount_paid, amount_due, payment_date, payment_due_date, payment_received, notes });
+    }
+  );
+});
+
+app.put('/api/receipts/:id', (req, res) => {
+  const { id } = req.params;
+  const { billing_name, billing_company, billing_email, billing_phone, billing_address, shipping_address, subtotal, shipping_price, tax, total, payment_type, amount_paid, amount_due, payment_date, payment_due_date, payment_received, notes } = req.body;
+  db.run(
+    `UPDATE receipts SET billing_name = ?, billing_company = ?, billing_email = ?, billing_phone = ?, billing_address = ?, shipping_address = ?, subtotal = ?, shipping_price = ?, tax = ?, total = ?, payment_type = ?, amount_paid = ?, amount_due = ?, payment_date = ?, payment_due_date = ?, payment_received = ?, notes = ? WHERE id = ?`,
+    [billing_name || '', billing_company || '', billing_email || '', billing_phone || '', billing_address || '', shipping_address || '', subtotal || 0, shipping_price || 0, tax || 0, total || 0, payment_type || '', amount_paid || 0, amount_due || 0, payment_date || '', payment_due_date || '', payment_received ? 1 : 0, notes || '', id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id, ...req.body });
+    }
+  );
+});
+
+app.delete('/api/receipts/:id', (req, res) => {
+  db.run('DELETE FROM receipts WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: true });
   });
 });
 

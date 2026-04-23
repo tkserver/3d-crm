@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Customers from './pages/Customers.jsx';
 import Orders from './pages/Orders.jsx';
 import Products from './pages/Products.jsx';
+import Invoice from './pages/Invoice.jsx';
 
 function App() {
   const [view, setView] = useState(() => {
@@ -11,11 +12,15 @@ function App() {
   });
   const [customers, setCustomers] = useState([]);
 
-  useEffect(() => {
+  const fetchCustomers = () => {
     fetch('/api/customers')
       .then(r => r.json())
       .then(setCustomers);
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [view]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -66,6 +71,20 @@ function App() {
         {view === 'customers' && <Customers navigateTo={navigateTo} />}
         {view === 'products' && <Products navigateTo={navigateTo} />}
         {view === 'orders' && <Orders customers={customers} setCustomers={setCustomers} />}
+        {view.startsWith('receipt-new-') && (
+          <Invoice
+            orderId={parseInt(view.replace('receipt-new-', ''))}
+            customers={customers}
+            onBack={() => navigateTo('orders')}
+          />
+        )}
+        {view.startsWith('receipt-') && !view.startsWith('receipt-new-') && (
+          <Invoice
+            receiptId={parseInt(view.replace('receipt-', ''))}
+            customers={customers}
+            onBack={() => navigateTo('orders')}
+          />
+        )}
       </main>
     </div>
   );
